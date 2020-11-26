@@ -1,0 +1,21 @@
+# cluster 1
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: hello-bar
+spec:
+  hosts:
+  - hello.bar.global
+  location: MESH_INTERNAL
+  ports:
+  - name: http1
+    number: 80
+    protocol: http
+  resolution: DNS
+  addresses:
+  # by the sidecar and routed appropriately.
+  - 240.0.0.2
+  endpoints:
+  - address: a7bb3526817624d0b9837f6622e6fed2-1797328150.eu-central-1.elb.amazonaws.com
+    ports:
+      http1: 15443 # Do not change this port value

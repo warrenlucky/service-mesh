@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metal
+  labels:
+    app: metal
+spec:
+  ports:
+  - port: 9080
+    name: http

@@ -1,0 +1,14 @@
+apiVersion: appmesh.k8s.aws/v1beta1
+kind: VirtualNode
+metadata:
+  name: metal
+  namespace: default
+spec:
+  meshName: dj-app
+  listeners:
+    - portMapping:
+        port: 9080
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostName: metal.default.svc.cluster.local
