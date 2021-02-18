@@ -2,4 +2,6 @@
 
 ** Manually create gke cluster and rename cluster name as 
 
-
+----
+kubectl config rename-context CONTEXT_NAME NEW_NAME
+----
