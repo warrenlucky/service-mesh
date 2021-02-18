@@ -20,9 +20,9 @@ spec:
     spec:
       containers:
       - name: hello-v2
-        image: ironcore864/go-hello-http:v2
+        image: ikubernetes/myapp:v2
         ports:
-        - containerPort: 8080
+        - containerPort: 80
 ---
 kind: Service
 apiVersion: v1
@@ -34,4 +34,4 @@ spec:
     version: v2
   ports:
     - port: 80
-      targetPort: 8080
+      targetPort: 80
