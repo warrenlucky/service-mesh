@@ -52,6 +52,14 @@ linkerd install \
     >(kubectl --context=east apply -f -)
 ----
 
+**** check things here by 
 
+----
+for ctx in west east; do
+  echo "Checking cluster: ${ctx} .........\n"
+  linkerd --context=${ctx} check || break
+  echo "-------------\n"
+done
+----
 
 
