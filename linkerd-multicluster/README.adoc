@@ -28,3 +28,30 @@ sudo cp step_0.15.3/bin/step /usr/bin
 Your certificate has been saved in root.crt.
 Your private key has been saved in root.key.
 ----
+
+**** To generate the issuer credentials using the trust anchor, run:
+----
+[root@devopstesting linkerd]# step certificate create identity.linkerd.cluster.local issuer.crt issuer.key \
+>   --profile intermediate-ca --not-after 8760h --no-password --insecure \
+>   --ca root.crt --ca-key root.key
+Your certificate has been saved in issuer.crt.
+Your private key has been saved in issuer.key.
+----
+
+**** An identity service in your cluster will use the certificate and key that you generated here to generate the certificates that each individual proxy uses. While we will be using the same issuer credentials on each cluster for this guide, it is a good idea to have separate ones for each cluster. Read through the certificate documentation for more details.
+
+With a valid trust anchor and issuer credentials, we can install Linkerd on your west and east clusters now. will create lots things by below command
+
+----
+linkerd install \
+  --identity-trust-anchors-file root.crt \
+  --identity-issuer-certificate-file issuer.crt \
+  --identity-issuer-key-file issuer.key \
+  | tee \
+    >(kubectl --context=west apply -f -) \
+    >(kubectl --context=east apply -f -)
+----
+
+
+
+
