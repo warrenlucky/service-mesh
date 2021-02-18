@@ -20,3 +20,11 @@ tar -xf step-cli.tar.gz
 sudo cp step_0.15.3/bin/step /usr/bin
 ----
 
+**** generate certificates
+
+----
+[root@devopstesting linkerd]# step certificate create root.linkerd.cluster.local root.crt root.key \
+>   --profile root-ca --no-password --insecure
+Your certificate has been saved in root.crt.
+Your private key has been saved in root.key.
+----
