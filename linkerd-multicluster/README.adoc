@@ -11,3 +11,12 @@ gcloud container clusters get-credentials devops3 --zone us-central1-c --project
 kubectl config rename-context gke_fr-dev-piiworker_us-central1-c_devops-2 east
 kubectl config rename-context gke_fr-dev-piiworker_us-central1-c_devops3 west
 ----
+
+**** We like to use the step CLI to generate these certificates. If you prefer openssl instead, feel free to use that! To generate the trust anchor with step
+**** install step first
+----
+wget -O step-cli.tar.gz https://github.com/smallstep/cli/releases/download/v0.15.3/step_linux_0.15.3_amd64.tar.gz
+tar -xf step-cli.tar.gz
+sudo cp step_0.15.3/bin/step /usr/bin
+----
+
