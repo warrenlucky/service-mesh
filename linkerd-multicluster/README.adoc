@@ -112,3 +112,25 @@ Checking gateway on cluster: east .........
 deployment "linkerd-gateway" successfully rolled out
 -------------\n
 ----
+
+
+**** Double check that the load balancer was able to allocate a public IP address by running:
+
+----
+[root@devopstesting linkerd]# for ctx in west east; do
+>   printf "Checking cluster: ${ctx} ........."
+>   while [ "$(kubectl --context=${ctx} -n linkerd-multicluster get service \
+>     -o 'custom-columns=:.status.loadBalancer.ingress[0].ip' \
+>     --no-headers)" = "<none>" ]; do
+>       printf '.'
+>       sleep 1
+>   done
+>   printf "\n"
+> done
+Checking cluster: west .........
+Checking cluster: east .........
+
+[root@devopstesting linkerd]# kubectl get svc -n linkerd-multicluster
+NAME              TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)                         AGE
+linkerd-gateway   LoadBalancer   10.108.13.37   35.222.122.155   4143:32392/TCP,4181:30886/TCP   7m40s
+----
