@@ -196,5 +196,94 @@ for ctx in west east; do
     rollout status deploy/podinfo || break
   echo "-------------\n"
 done
+
+Adding test services on cluster: west .........
+namespace/test created
+configmap/frontend created
+service/frontend created
+service/podinfo created
+deployment.apps/frontend created
+deployment.apps/podinfo created
+horizontalpodautoscaler.autoscaling/podinfo created
+Waiting for deployment "podinfo" rollout to finish: 0 of 1 updated replicas are available...
+Waiting for deployment spec update to be observed...
+Waiting for deployment "podinfo" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "podinfo" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "podinfo" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "podinfo" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "podinfo" rollout to finish: 1 of 2 updated replicas are available...
+Waiting for deployment "podinfo" rollout to finish: 1 of 2 updated replicas are available...
+deployment "podinfo" successfully rolled out
+-------------\n
+Adding test services on cluster: east .........
+namespace/test created
+configmap/frontend created
+service/frontend created
+service/podinfo created
+deployment.apps/frontend created
+deployment.apps/podinfo created
+horizontalpodautoscaler.autoscaling/podinfo created
+Waiting for deployment spec update to be observed...
+Waiting for deployment spec update to be observed...
+Waiting for deployment "podinfo" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "podinfo" rollout to finish: 0 of 1 updated replicas are available...
+Waiting for deployment spec update to be observed...
+Waiting for deployment "podinfo" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "podinfo" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "podinfo" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "podinfo" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "podinfo" rollout to finish: 1 of 2 updated replicas are available...
+Waiting for deployment "podinfo" rollout to finish: 1 of 2 updated replicas are available...
+deployment "podinfo" successfully rolled out
+-------------\n
 ----
 
+****You’ll now have a test namespace running two deployments in each cluster - frontend and podinfo. podinfo has been configured slightly differently in each cluster with a different name and color so that we can tell where requests are going.
+
+To see what it looks like from the west cluster right now, you can run:
+
+----
+official suggest do this. but i just edit the service to LoadBalancer.
+kubectl --context=west -n test port-forward svc/frontend 8080
+curl http://localhost:8080
+{
+  "hostname": "podinfo-5c8cf55777-zbfls",
+  "version": "4.0.2",
+  "revision": "b4138fdb4dce7b34b6fc46069f70bb295aa8963c",
+  "color": "#6c757d",
+  "logo": "https://raw.githubusercontent.com/stefanprodan/podinfo/gh-pages/cuddle_clap.gif",
+  "message": "greetings from west",
+  "goos": "linux",
+  "goarch": "amd64",
+  "runtime": "go1.14.3",
+  "num_goroutine": "8",
+  "num_cpu": "4"
+}
+
+
+kubectl --context=east -n test edit svc/frontend
+kubectl --context=west -n test edit svc/frontend
+----
+
+=== export service
+*** To make sure sensitive services are not mirrored and cluster performance is impacted by the creation or deletion of services, we require that services be explicitly exported. For the purposes of this guide, we will be exporting the podinfo service from the east cluster to the west cluster. To do this, we must first export the podinfo service in the east cluster. You can do this by adding the mirror.linkerd.io/exported label:
+
+----
+kubectl --context=east label svc -n test podinfo mirror.linkerd.io/exported=true
+----
+
+*** Check out the service that was just created by the service mirror controller!
+----
+[root@devopstesting linkerd]# kubectl --context=west -n test get svc podinfo-east
+NAME           TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)             AGE
+podinfo-east   ClusterIP   10.108.8.146   <none>        9898/TCP,9999/TCP   84s
+[root@devopstesting linkerd]# kubectl --context=west -n test get svc
+NAME           TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)             AGE
+frontend       LoadBalancer   10.108.7.40    34.122.22.191   8080:31247/TCP      79m
+podinfo        ClusterIP      10.108.4.149   <none>          9898/TCP,9999/TCP   79m
+podinfo-east   ClusterIP      10.108.8.146   <none>          9898/TCP,9999/TCP   102s
+[root@devopstesting linkerd]# kubectl --context=east -n test get svc
+NAME       TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)             AGE
+frontend   LoadBalancer   10.48.5.116   35.232.45.49   8080:31092/TCP      79m
+podinfo    ClusterIP      10.48.1.173   <none>         9898/TCP,9999/TCP   79m
+----
