@@ -134,3 +134,21 @@ Checking cluster: east .........
 NAME              TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)                         AGE
 linkerd-gateway   LoadBalancer   10.108.13.37   35.222.122.155   4143:32392/TCP,4181:30886/TCP   7m40s
 ----
+
+**** To link the west cluster to the east one, run:
+
+----
+linkerd --context=east multicluster link --cluster-name east |
+  kubectl --context=west apply -f -
+  
+secret/cluster-credentials-east created
+link.multicluster.linkerd.io/east created
+clusterrole.rbac.authorization.k8s.io/linkerd-service-mirror-access-local-resources-east created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-service-mirror-access-local-resources-east created
+role.rbac.authorization.k8s.io/linkerd-service-mirror-read-remote-creds-east created
+rolebinding.rbac.authorization.k8s.io/linkerd-service-mirror-read-remote-creds-east created
+serviceaccount/linkerd-service-mirror-east created
+deployment.apps/linkerd-service-mirror-east created
+service/probe-gateway-east created
+----
+
