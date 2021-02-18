@@ -62,4 +62,37 @@ for ctx in west east; do
 done
 ----
 
+**** To install the multicluster components on both west and east, you can run:
+
+----
+for ctx in west east; do
+  echo "Installing on cluster: ${ctx} ........."
+  linkerd --context=${ctx} multicluster install | \
+    kubectl --context=${ctx} apply -f - || break
+  echo "-------------\n"
+done
+
+Installing on cluster: west .........
+namespace/linkerd-multicluster created
+configmap/linkerd-gateway-config created
+deployment.apps/linkerd-gateway created
+service/linkerd-gateway created
+serviceaccount/linkerd-gateway created
+clusterrole.rbac.authorization.k8s.io/linkerd-service-mirror-remote-access-default created
+serviceaccount/linkerd-service-mirror-remote-access-default created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-service-mirror-remote-access-default created
+customresourcedefinition.apiextensions.k8s.io/links.multicluster.linkerd.io created
+-------------\n
+Installing on cluster: east .........
+namespace/linkerd-multicluster created
+configmap/linkerd-gateway-config created
+deployment.apps/linkerd-gateway created
+service/linkerd-gateway created
+serviceaccount/linkerd-gateway created
+clusterrole.rbac.authorization.k8s.io/linkerd-service-mirror-remote-access-default created
+serviceaccount/linkerd-service-mirror-remote-access-default created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-service-mirror-remote-access-default created
+customresourcedefinition.apiextensions.k8s.io/links.multicluster.linkerd.io created
+-------------\n
+----
 
