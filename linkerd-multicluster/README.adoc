@@ -152,3 +152,10 @@ deployment.apps/linkerd-service-mirror-east created
 service/probe-gateway-east created
 ----
 
+**** Linkerd will look at your current east context, extract the cluster configuration which contains the server location as well as the CA bundle. It will then fetch the ServiceAccount token and merge these pieces of configuration into a kubeconfig that is a secret.
+
+Running check again will make sure that the service mirror has discovered this secret and can reach east.
+----
+linkerd --context=west check --multicluster
+----
+
