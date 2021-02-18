@@ -96,3 +96,19 @@ customresourcedefinition.apiextensions.k8s.io/links.multicluster.linkerd.io crea
 -------------\n
 ----
 
+**** Make sure gateway successfully deployed.
+
+----
+[root@devopstesting linkerd]# for ctx in west east; do
+>   echo "Checking gateway on cluster: ${ctx} ........."
+>   kubectl --context=${ctx} -n linkerd-multicluster \
+>     rollout status deploy/linkerd-gateway || break
+>   echo "-------------\n"
+> done
+Checking gateway on cluster: west .........
+deployment "linkerd-gateway" successfully rolled out
+-------------\n
+Checking gateway on cluster: east .........
+deployment "linkerd-gateway" successfully rolled out
+-------------\n
+----
