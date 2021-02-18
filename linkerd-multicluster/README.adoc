@@ -175,4 +175,26 @@ linkerd-multicluster
         * east
 Status check results are √
 ----
+**** Additionally, the east gateway should now show up in the list:
+
+----
+[root@devopstesting linkerd]# linkerd --context=west multicluster gateways
+CLUSTER  ALIVE    NUM_SVC  LATENCY_P50  LATENCY_P95  LATENCY_P99  
+east     True           0          4ms          5ms          5ms  
+----
+
+=== Test multi-cluster
+
+**** It is time to test this all out! The first step is to add some services that we can mirror. To add these to both clusters, you can run:
+
+----
+for ctx in west east; do
+  echo "Adding test services on cluster: ${ctx} ........."
+  kubectl --context=${ctx} apply \
+    -k "github.com/linkerd/website/multicluster/${ctx}/"
+  kubectl --context=${ctx} -n test \
+    rollout status deploy/podinfo || break
+  echo "-------------\n"
+done
+----
 
