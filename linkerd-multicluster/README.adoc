@@ -287,3 +287,35 @@ NAME       TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)             AGE
 frontend   LoadBalancer   10.48.5.116   35.232.45.49   8080:31092/TCP      79m
 podinfo    ClusterIP      10.48.1.173   <none>         9898/TCP,9999/TCP   79m
 ----
+
+*** From the architecture, you’ll remember that the service mirror component is doing more than just moving services over. It is also managing the endpoints on the mirrored service. To verify that is setup correctly, you can check the endpoints in west and verify that they match the gateway’s public IP address in east.
+
+----
+[root@devopstesting linkerd]# kubectl --context=west -n test get endpoints podinfo-east \
+>   -o 'custom-columns=ENDPOINT_IP:.subsets[*].addresses[*].ip'
+ENDPOINT_IP
+104.154.46.246
+[root@devopstesting linkerd]# kubectl --context=east -n linkerd-multicluster get svc linkerd-gateway \
+>   -o "custom-columns=GATEWAY_IP:.status.loadBalancer.ingress[*].ip"
+GATEWAY_IP
+104.154.46.246
+----
+
+*** At this point, we can hit the podinfo service in east from the west cluster. This requires the client to be meshed, so let’s run curl from within the frontend pod:
+"apk add curl" . I am use centos. needn't this. just use below command is OK.
+----
+[root@devopstesting linkerd]# kubectl --context=west -n test exec -c nginx -it   $(kubectl --context=west -n test get po -l app=frontend \
+    --no-headers -o custom-columns=:.metadata.name)   -- /bin/sh -c "curl http://podinfo-east:9898"
+{
+  "hostname": "podinfo-57b4899f7d-lvvzz",
+  "version": "4.0.2",
+  "revision": "b4138fdb4dce7b34b6fc46069f70bb295aa8963c",
+  "color": "#007bff",
+  "logo": "https://raw.githubusercontent.com/stefanprodan/podinfo/gh-pages/cuddle_clap.gif",
+  "message": "greetings from east",
+  "goos": "linux",
+  "goarch": "amd64",
+  "runtime": "go1.14.3",
+  "num_goroutine": "9",
+  "num_cpu": "2"
+----
