@@ -1,12 +1,12 @@
 === Create cluster in gcp
 
 ** Manually create gke cluster and rename cluster name as east, west
-* enable access for two cluster like
+*** enable access for two cluster like
 ----
 gcloud container clusters get-credentials devops3 --zone us-central1-c --project fr-dev-piiworker
 ----
 
-* rename
+*** rename
 ----
 kubectl config rename-context gke_fr-dev-piiworker_us-central1-c_devops-2 east
 kubectl config rename-context gke_fr-dev-piiworker_us-central1-c_devops3 west
