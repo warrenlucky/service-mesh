@@ -319,3 +319,11 @@ GATEWAY_IP
   "num_goroutine": "9",
   "num_cpu": "2"
 ----
+
+***you can also reach this from your browser at http://localhost:8080/east. Refresh a couple times and you’ll be able to get metrics from linkerd stat as well.
+note: for me, i install ingress-controller, export webui by ingress. 
+here is my repo. just clone it . and edit deploy.yaml for updating export nodeport to loadbalancer since i am using gcp. we can see the external ip. then edit ingress.yaml, export the host as "dashboard.east.com". then apply it . then add ns by edit hosts file in my local.  we need two ui . one is for west context cluster. the other is for east. for west we need to do it again. but export hosts for ingress as "dashboard.west.com" and add ns to my local hosts file.
+
+----
+https://github.com/warrenlucky/linkerd-warren-test.git
+----
