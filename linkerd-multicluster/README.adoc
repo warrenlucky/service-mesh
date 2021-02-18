@@ -359,3 +359,89 @@ req id=0:8 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :meth
 rsp id=0:8 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :status=200 latency=3392µs
 end id=0:8 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true duration=49µs response-length=382B
 ----
+
+*** In addition to making sure all your requests are encrypted, it is important to block arbitrary requests coming into your cluster. We do this by validating that requests are coming from clients in the mesh. To do this validation, we rely on a shared trust anchor between clusters. To see what happens when a client is outside the mesh, you can run:
+
+----
+[root@devopstesting linkerd-warren-test]# kubectl --context=west -n test run -it --rm --image=alpine:3 test -- \
+>   /bin/sh -c "curl -vv http://podinfo-east:9898"
+pod "test" deleted
+error: timed out waiting for the condition
+----
+
+*** TrafficSplit allows us to define weights between multiple services and split traffic between them. In a failover scenario, you want to do this slowly as to make sure you don’t overload the other cluster or trip any SLOs because of the added latency. To get this all working with our scenario, let’s split between the podinfo service in west and east. To configure this, you’ll run:
+
+----
+cat <<EOF | kubectl --context=west apply -f -
+apiVersion: split.smi-spec.io/v1alpha1
+kind: TrafficSplit
+metadata:
+  name: podinfo
+  namespace: test
+spec:
+  service: podinfo
+  backends:
+  - service: podinfo
+    weight: 50
+  - service: podinfo-east
+    weight: 50
+EOF
+
+----
+
+**** get trafficsplit
+
+----
+[root@devopstesting linkerd-warren-test]# kubectl get TrafficSplit -n test --context west
+NAME      SERVICE
+podinfo   podinfo
+----
+
+*** If you’re still running port-forward, you can send your browser to http://localhost:8080. Refreshing the page should show both clusters.Alternatively, for the command line approach, curl localhost:8080 will give you a message that greets from west and east.
+refersh http://34.122.22.191:8080/
+----
+[root@devopstesting linkerd-warren-test]# kubectl --context=west -n test get svc/frontend
+NAME       TYPE           CLUSTER-IP    EXTERNAL-IP     PORT(S)          AGE
+frontend   LoadBalancer   10.108.7.40   34.122.22.191   8080:31247/TCP   3h1m
+----
+
+***  You can also watch what’s happening with metrics. To see the source side of things (west), you can run:
+----
+linkerd --context=west -n test stat trafficsplit
+
+[root@devopstesting linkerd-warren-test]# linkerd --context=west -n test stat trafficsplit
+NAME      APEX      LEAF           WEIGHT   SUCCESS      RPS   LATENCY_P50   LATENCY_P95   LATENCY_P99
+podinfo   podinfo   podinfo            50   100.00%   0.6rps           1ms           3ms           3ms
+podinfo   podinfo   podinfo-east       50   100.00%   0.7rps           2ms           3ms           3ms
+----
+
+*** It is also possible to watch this from the target (east) side by running:
+----
+[root@devopstesting linkerd-warren-test]# linkerd --context=east -n test stat \
+>   --from deploy/linkerd-gateway \
+>   --from-namespace linkerd-multicluster \
+>   deploy/podinfo
+NAME      MESHED   SUCCESS      RPS   LATENCY_P50   LATENCY_P95   LATENCY_P99   TCP_CONN
+podinfo      2/2   100.00%   1.6rps           1ms           2ms           2ms          2
+
+----
+
+*** can also see the trafficsplit in http://dashboard.west.com/namespaces/test/trafficsplits then click podinfo. can see the picture for the trafficsplit map.
+
+=== Cleanup, I didn't do it. try copy official doc here!. great , congratulation!!!
+
+*** To cleanup the multicluster control plane, you can run:
+
+----
+for ctx in west east; do
+  linkerd --context=${ctx} multicluster uninstall | kubectl --context=${ctx} delete -f -
+done
+----
+
+*** If you’d also like to remove your Linkerd installation, run:
+
+----
+for ctx in west east; do
+  linkerd --context=${ctx} uninstall | kubectl --context=${ctx} delete -f -
+done
+----
