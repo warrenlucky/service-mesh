@@ -320,10 +320,42 @@ GATEWAY_IP
   "num_cpu": "2"
 ----
 
-***you can also reach this from your browser at http://localhost:8080/east. Refresh a couple times and you’ll be able to get metrics from linkerd stat as well.
+*** you can also reach this from your browser at http://localhost:8080/east. Refresh a couple times and you’ll be able to get metrics from linkerd stat as well.
 note: for me, i install ingress-controller, export webui by ingress. 
 here is my repo. just clone it . and edit deploy.yaml for updating export nodeport to loadbalancer since i am using gcp. we can see the external ip. then edit ingress.yaml, export the host as "dashboard.east.com". then apply it . then add ns by edit hosts file in my local.  we need two ui . one is for west context cluster. the other is for east. for west we need to do it again. but export hosts for ingress as "dashboard.west.com" and add ns to my local hosts file.
 
 ----
 https://github.com/warrenlucky/linkerd-warren-test.git
+----
+
+
+*** now you can grafana. explorer http://dashboard.west.com/grafana
+
+*** to check security
+note: I got some error like below because permission. need to add permission first. add clusterrolebinding for two cluster. both west and east
+error like.
+HTTP error, status Code [403] (unexpected API response: {"error":"tap authorization failed (not authorized to access deployments.tap.linkerd.io)
+
+----
+[root@devopstesting linkerd-warren-test]# kubectl --context west create clusterrolebinding $(whoami)-cluster-admin --clusterrole=cluster-admin --user=$(gcloud config get-value account)
+clusterrolebinding.rbac.authorization.k8s.io/root-cluster-admin created
+[root@devopstesting linkerd-warren-test]# kubectl --context east create clusterrolebinding $(whoami)-cluster-admin --clusterrole=cluster-admin --user=$(gcloud config get-value account)
+
+[root@devopstesting linkerd-warren-test]# linkerd --context=west -n test tap deploy/frontend | grep "$(kubectl --context=east -n linkerd-multicluster get svc linkerd-gateway \
+    -o "custom-columns=GATEWAY_IP:.status.loadBalancer.ingress[*].ip")"
+req id=0:0 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :method=GET :authority=podinfo.test.svc.cluster.local:9898 :path=/
+rsp id=0:0 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :status=200 latency=3253µs
+end id=0:0 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true duration=245µs response-length=382B
+req id=0:2 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :method=GET :authority=podinfo.test.svc.cluster.local:9898 :path=/
+rsp id=0:2 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :status=200 latency=3597µs
+end id=0:2 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true duration=278µs response-length=382B
+req id=0:4 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :method=GET :authority=podinfo.test.svc.cluster.local:9898 :path=/
+rsp id=0:4 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :status=200 latency=5641µs
+end id=0:4 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true duration=112µs response-length=382B
+req id=0:6 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :method=GET :authority=podinfo.test.svc.cluster.local:9898 :path=/
+rsp id=0:6 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :status=200 latency=3419µs
+end id=0:6 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true duration=62µs response-length=382B
+req id=0:8 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :method=GET :authority=podinfo.test.svc.cluster.local:9898 :path=/
+rsp id=0:8 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true :status=200 latency=3392µs
+end id=0:8 proxy=out src=10.104.0.9:58580 dst=104.154.46.246:4143 tls=true duration=49µs response-length=382B
 ----
